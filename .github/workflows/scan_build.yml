@@ -52,11 +52,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: create_artifact
 
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [ 'cpp' ]
-
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
@@ -64,7 +59,7 @@ jobs:
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
       with:
-        languages: ${{ matrix.language }}
+        languages: cpp
 
     - name: Set up Ubuntu environment
       run: |
@@ -76,6 +71,7 @@ jobs:
           pkg-config \
           build-essential \
           nlohmann-json3-dev \
+          cppcheck \
           && sudo rm -rf /var/lib/apt/lists/*
 
     - name: Compile code
