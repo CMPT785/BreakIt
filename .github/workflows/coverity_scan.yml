@@ -11,40 +11,33 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
-          - name: Checkout code
-            uses: actions/checkout@v2
+        - name: Checkout code
+          uses: actions/checkout@v2
 
-# name: Coverity Scan
-# on: 
-#   workflow_dispatch:  # Allows manual triggering
+        - name: Download dependencies
+          run: |
+            sudo apt-get update && sudo apt-get install -y \
+                g++ \
+                make \
+                cmake \
+                libssl-dev \
+                pkg-config \
+                build-essential \
+                nlohmann-json3-dev \
+                && sudo rm -rf /var/lib/apt/lists/*
 
-# jobs:
-#   coverity-scan:
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Checkout Repository
-#         uses: actions/checkout@v3
-
-#       - name: Install Dependencies
-#         run: sudo apt-get install -y build-essential cmake wget curl
-
-#       - name: Download Coverity
-#         run: |
-#           curl --silent --output coverity_tool.tgz \
-#           --data "token=${{ secrets.COVERITY_PASSPHRASE }}&project=CMPT785-SecureSoftware/FortressFS" \
-#           https://scan.coverity.com/download/linux64
-#           tar -xvzf coverity_tool.tgz
-#           COVERITY_DIR=$(find . -type d -name "cov-analysis-linux64-*")
-#           echo "Coverity installed in $COVERITY_DIR"
-#           echo "COVERITY_DIR=$COVERITY_DIR" >> $GITHUB_ENV
-          
-#           chmod +x $COVERITY_DIR/bin/*
-
-#       - name: Install Dependencies
-#         run: |
-#           sudo apt-get update
-#           sudo apt-get install nlohmann-json3-dev
-#           sudo apt-get install g++ libssl-dev
+        - name: Setup Coverity
+          run: |
+            curl --silent --output coverity_tool.tgz \
+            --data "token=${{ secrets.PROJECT_TOKEN }}&project=cmpt785-breakit" https://scan.coverity.com/download/linux64
+            tar -xvzf coverity_tool.tgz
+            COVERITY_DIR=$(find . -type d -name "cov-analysis-linux64-*")
+            echo "################ INSTALLATION SUCCESS ################"
+            echo "COVERITY_DIR=$COVERITY_DIR" >> $GITHUB_ENV
+            
+            echo "Setting up permission for Coverity file saved in $COVERITY_DIR"
+            chmod +x $COVERITY_DIR/bin/*
+            echo -e "\n################ SETUP SUCCESS ################"
           
 #       - name: Build with Coverity
 #         run: |
