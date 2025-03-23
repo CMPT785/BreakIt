@@ -52,10 +52,14 @@ jobs:
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
 
+    outputs:
+      build_status: ${{ steps.build.outcome }}
+
   create_artifact:
     name: Create Artifact
     runs-on: ubuntu-latest
     needs: analyze
+    if: needs.analyze.outputs.build_status == 'success'
 
     steps:
     - name: Checkout repository
