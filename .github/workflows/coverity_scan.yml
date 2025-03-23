@@ -1,10 +1,7 @@
 name: Coverity Scan
 
 on:
-    workflow_run:
-        workflows: ["Scan and publish"]
-        types:
-            - completed
+    workflow_dispatch: # Manually trigger the workflow (due to limitations of free tier)
 
 jobs:
     coverity_scan:
@@ -28,31 +25,32 @@ jobs:
 
         - name: Setup Coverity
           run: |
-            curl --silent --output coverity_tool.tgz \
-            --data "token=${{ secrets.PROJECT_TOKEN }}&project=cmpt785-breakit" https://scan.coverity.com/download/linux64
-            tar -xvzf coverity_tool.tgz
-            COVERITY_DIR=$(find . -type d -name "cov-analysis-linux64-*")
-            echo "################ INSTALLATION SUCCESS ################"
-            echo "COVERITY_DIR=$COVERITY_DIR" >> $GITHUB_ENV
+            curl --silent --output coverity_tool.tgz --data "token=${{ secrets.COV_PROJECT_TOKEN }}&project=${{ secrets.COV_ORG }}" \
+                https://scan.coverity.com/download/linux64 
+            tar -xzf coverity_tool.tgz 
             
-            echo "Setting up permission for Coverity file saved in $COVERITY_DIR"
+            COVERITY_DIR=$(find . -type d -name "cov-analysis-linux64-*")
+            echo -e "\n################ DOWNLOAD SUCCESS ################"
+            
+            echo "COVERITY_DIR=$COVERITY_DIR" >> $GITHUB_ENV
+            echo -e "\nSetting up permission for Coverity file saved in $COVERITY_DIR"
             chmod +x $COVERITY_DIR/bin/*
             echo -e "\n################ SETUP SUCCESS ################"
           
-#       - name: Build with Coverity
-#         run: |
-#           mkdir -p cov-int
-#           ${{ env.COVERITY_DIR }}/bin/cov-build --dir cov-int \
-#             g++ -static -static-libgcc -static-libstdc++ -I include src/*.cpp app/main.cpp -lssl -lcrypto -o fortresses
+        - name: Build with Coverity
+          run: |
+            mkdir -p cov-int
+            ${{ env.COVERITY_DIR }}/bin/cov-build --dir cov-int \
+                g++ -static -static-libgcc -static-libstdc++ -I include src/*.cpp app/main.cpp -lssl -lcrypto -o fortresses
 
-#       - name: Compress Results
-#         run: tar czvf analysis.tar.gz cov-int
+        - name: Compress Results
+          run: tar czvf analysis.tar.gz cov-int
 
-#       - name: Upload to Coverity
-#         run: |
-#           curl --form token=${{ secrets.COVERITY_PASSPHRASE}} \
-#                --form email=midhunjmanoj9@gmail.com \
-#                --form file=@analysis.tar.gz \
-#                --form version="1.0" \
-#                --form description="Static Analysis" \
-#                https://scan.coverity.com/builds?project=CMPT785-SecureSoftware/FortressFS
+        - name: Upload to Coverity
+          run: |
+            curl --form token=${{ secrets.COV_PROJECT_TOKEN }} \
+                --form email=${{ secrets.COV_ADMIN }} \
+                --form file=@analysis.tar.gz \
+                --form version="1.0" \
+                --form description="Code Scan" \
+                https://scan.coverity.com/builds?project=${{ secrets.COV_ORG }}
