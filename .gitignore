@@ -1,7 +1,0 @@
-admin_keys/
-private_keys/
-public_keys/
-filesystem/
-*.pem
-*.json
-*.log
